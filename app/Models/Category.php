@@ -13,6 +13,8 @@ class Category extends Model
         'category',
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function entities()
     {
         return $this->hasMany(Entity::class,'category_id');
