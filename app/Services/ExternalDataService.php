@@ -19,19 +19,21 @@ class ExternalDataService{
     }
 
     public function getExternalData(){
-        // TODO: Implementar la lógica para obtener datos de recursos externos
+
         if($this->type == 'json_file'){
             $this->storageDataFromJsonFile($this->url);
-        }else if($this->type == 'web_service'){
+        }
+        if($this->type == 'web_service'){
             $this->getDataFromWebService($this->url);
-        }else{
-            throw new Exception("El tipo de recurso externo no es válido", 1);
         }
     }
 
     private function  storageDataFromJsonFile($fileUrl){
         $jsonFile = File::get($fileUrl);
         $fileData = json_decode($jsonFile, true);
+        if(!$fileData['entries']){
+            throw new Exception('No data found in the JSON file');
+        }
         foreach ($fileData['entries'] as $fileItem) {
             $currentCategoryId = $this->getCategoryId($fileItem['Category']);
             if($currentCategoryId > 0){
@@ -48,14 +50,17 @@ class ExternalDataService{
 
     private function getDataFromWebService($webServiceUrl){
         $webService = Http::get($webServiceUrl);
-        $fileData = json_decode($webService, true);
-        foreach ($fileData['entries'] as $fileItem) {
-            $currentCategoryId = $this->getCategoryId($fileItem['Category']);
+        $webData = json_decode($webService, true);
+        if(!$webData['entries']){
+            throw new Exception('No data found in the web service');
+        }
+        foreach ($webData['entries'] as $webItem) {
+            $currentCategoryId = $this->getCategoryId($webItem['Category']);
             if($currentCategoryId > 0){
                 Entity::create([
-                    'api' => $fileItem['API'],
-                    'description' => $fileItem['Description'],
-                    'link' => $fileItem['Link'],
+                    'api' => $webItem['API'],
+                    'description' => $webItem['Description'],
+                    'link' => $webItem['Link'],
                     'category_id' => $currentCategoryId,
                 ]);
             }
